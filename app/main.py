@@ -1,8 +1,23 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import ShippingRequest, ShippingResponse, CourierRate
 from app.services import delhivery, dtdc, bluedart, shiprocket
 
 app = FastAPI(title="Courier Rate Comparator API")
+
+# Allow Lovable domain to call your API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://preview--courier-compass-43.lovable.app",  # your Lovable preview domain
+        "https://courier-compass-43.lovable.app",            # published domain
+        "https://lovable.app",
+        "*"  # optional: allow all during testing
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/compare-rates", response_model=ShippingResponse)
 def compare_rates(request: ShippingRequest):
