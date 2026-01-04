@@ -8,12 +8,27 @@ resources:
 - repo: self
 
 variables:
-  dockerRegistryServiceConnection: '44896305-bb29-44ac-bbe4-93cfea0c3371'
-  imageRepository: 'pavanpatilshippingratecalculator'
-  containerRegistry: 'losgisticsprod.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
-  tag: '$(Build.BuildId)'
-  vmImageName: 'logistics'
+- group: logistics
+
+- name: dockerRegistryServiceConnection
+  value: '44896305-bb29-44ac-bbe4-93cfea0c3371'
+
+- name: imageRepository
+  value: 'pavanpatilshippingratecalculator'
+
+- name: containerRegistry
+  value: 'losgisticsprod.azurecr.io'
+
+- name: dockerfilePath
+  value: '$(Build.SourcesDirectory)/Dockerfile'
+
+- name: tag
+  value: '$(Build.BuildId)'
+
+- name: vmImageName
+  value: 'logistics'
+
+
 
 stages:
 - stage: QualityAndBuild
@@ -62,6 +77,24 @@ stages:
     # -------------------------------------------------
     # 4. SnykCloud - Application dependencies scan
     # -------------------------------------------------
+
+    # -------------------------------------------------
+    # 5. Snyk App Scan (Python 3.11 container)
+    # -------------------------------------------------
+    - script: |
+        docker run --rm \
+          -v $(Build.SourcesDirectory):/project \
+          -w /project \
+          python:3.11-slim \
+          sh -c "
+            pip install --upgrade pip snyk &&
+            snyk auth \$snyk_token &&
+            snyk test --file=requirements.txt --severity-threshold=high
+          "
+      displayName: Snyk Open Source Scan (Python 3.11)
+      env:
+        SNYK_TOKEN: $(snyk_token)
+
     - task: SnykSecurityScan@1
       inputs:
         serviceConnectionEndpoint: 'snyk-cloud'
