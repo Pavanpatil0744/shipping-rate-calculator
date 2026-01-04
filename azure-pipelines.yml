@@ -1,6 +1,9 @@
 trigger:
 - main
 
+pr:
+- main
+
 resources:
 - repo: self
 
@@ -13,8 +16,8 @@ variables:
   vmImageName: 'logistics'
 
 stages:
-- stage: Build
-  displayName: SonarQube + Docker Build
+- stage: QualityAndBuild
+  displayName: SonarCloud Quality Gate + Docker Build
   jobs:
   - job: Build
     displayName: Quality Check and Build
@@ -22,46 +25,46 @@ stages:
       name: $(vmImageName)
 
     steps:
+    # -------------------------------------------------
+    # 1. Checkout (FULL history required for blame)
+    # -------------------------------------------------
     - checkout: self
+      fetchDepth: 0
+      clean: true
 
-    # -------------------------------
-    # SonarQube - Prepare (ONLY main)
-    # -------------------------------
-    - task: SonarQubePrepare@8
-      displayName: SonarQube Prepare
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    # -------------------------------------------------
+    # 2. SonarCloud - Prepare Analysis
+    # -------------------------------------------------
+    - task: SonarCloudPrepare@4
       inputs:
-        SonarQube: 'kvm-sonarqube'
+        SonarQube: 'sonarcloud'
+        organization: 'techwithpatil'
         scannerMode: 'cli'
         configMode: 'manual'
-        cliProjectKey: 'logistics-shipping-rate-calculator'
-        cliProjectName: 'shipping-rate-calculator'
-        cliProjectVersion: '1.0.$(Build.BuildId)'
+        cliProjectKey: 'techwithpatil_logistics'
+        cliProjectName: 'logistics'
         cliSources: '.'
 
-    # -------------------------------
-    # SonarQube - Analyze
-    # -------------------------------
-    - task: SonarQubeAnalyze@8
-      displayName: SonarQube Analyze
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    # -------------------------------------------------
+    # 3. SonarCloud - Analyze Code
+    # -------------------------------------------------
+    - task: SonarCloudAnalyze@4
       inputs:
         jdkversion: 'JAVA_HOME_17_X64'
 
-    # -------------------------------
-    # SonarQube - Quality Gate
-    # -------------------------------
-    - task: SonarQubePublish@8
-      displayName: SonarQube Quality Gate
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    # -------------------------------------------------
+    # 4. SonarCloud - Enforce Quality Gate
+    # -------------------------------------------------
+    - task: SonarCloudPublish@4
       inputs:
         pollingTimeoutSec: '300'
 
-    # -------------------------------
-    # Docker Build & Push
-    # -------------------------------
+    # -------------------------------------------------
+    # 5. Docker Build & Push (ONLY if quality passed)
+    # -------------------------------------------------
     - task: Docker@2
       displayName: Build and push Docker image
+      condition: succeeded()
       inputs:
         command: buildAndPush
         repository: $(imageRepository)
