@@ -50,29 +50,29 @@ stages:
     # -------------------------------------------------
     # 2. SonarCloud - Prepare Analysis
     # -------------------------------------------------
-    - task: SonarCloudPrepare@4
-      inputs:
-        SonarQube: 'sonarcloud'
-        organization: 'techwithpatil'
-        scannerMode: 'cli'
-        configMode: 'manual'
-        cliProjectKey: 'techwithpatil_logistics'
-        cliProjectName: 'logistics'
-        cliSources: '.'
+    # - task: SonarCloudPrepare@4
+    #   inputs:
+    #     SonarQube: 'sonarcloud'
+    #     organization: 'techwithpatil'
+    #     scannerMode: 'cli'
+    #     configMode: 'manual'
+    #     cliProjectKey: 'techwithpatil_logistics'
+    #     cliProjectName: 'logistics'
+    #     cliSources: '.'
 
     # -------------------------------------------------
     # 3. SonarCloud - Analyze Code
     # -------------------------------------------------
-    - task: SonarCloudAnalyze@4
-      inputs:
-        jdkversion: 'JAVA_HOME_17_X64'
+    # - task: SonarCloudAnalyze@4
+    #   inputs:
+    #     jdkversion: 'JAVA_HOME_17_X64'
 
     # -------------------------------------------------
     # 4. SonarCloud - Enforce Quality Gate
     # -------------------------------------------------
-    - task: SonarCloudPublish@4
-      inputs:
-        pollingTimeoutSec: '300'
+    # - task: SonarCloudPublish@4
+    #   inputs:
+    #     pollingTimeoutSec: '300'
       
     # -------------------------------------------------
     # 4. SnykCloud - Application dependencies scan
@@ -87,9 +87,11 @@ stages:
           -w /project \
           python:3.11-slim \
           sh -c "
-            pip install --upgrade pip snyk &&
-            snyk auth \$snyk_token &&
-            snyk test --file=requirements.txt --severity-threshold=high
+            apt-get update && apt-get install -y curl &&
+            curl -sSL https://static.snyk.io/cli/latest/snyk-linux -o snyk &&
+            chmod +x snyk &&
+            ./snyk auth \$snyk_token &&
+            ./snyk test --file=requirements.txt --severity-threshold=high
           "
       displayName: Snyk Open Source Scan (Python 3.11)
       env:
