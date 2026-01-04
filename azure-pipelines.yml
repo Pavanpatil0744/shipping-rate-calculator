@@ -25,10 +25,11 @@ stages:
     - checkout: self
 
     # -------------------------------
-    # SonarQube - Prepare
+    # SonarQube - Prepare (ONLY main)
     # -------------------------------
     - task: SonarQubePrepare@8
       displayName: SonarQube Prepare
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         SonarQube: 'kvm-sonarqube'
         scannerMode: 'cli'
@@ -37,14 +38,13 @@ stages:
         cliProjectName: 'shipping-rate-calculator'
         cliProjectVersion: '1.0.$(Build.BuildId)'
         cliSources: '.'
-        extraProperties: |
-          sonar.branch.name=
 
     # -------------------------------
     # SonarQube - Analyze
     # -------------------------------
     - task: SonarQubeAnalyze@8
       displayName: SonarQube Analyze
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         jdkversion: 'JAVA_HOME_17_X64'
 
@@ -53,6 +53,7 @@ stages:
     # -------------------------------
     - task: SonarQubePublish@8
       displayName: SonarQube Quality Gate
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         pollingTimeoutSec: '300'
 
