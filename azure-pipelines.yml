@@ -95,7 +95,7 @@ stages:
           "
       displayName: Snyk Open Source Scan (Python 3.11)
       env:
-        SNYK_TOKEN: $(snyk_token)
+        snyk_token: $(snyk_token)
 
     - task: SnykSecurityScan@1
       inputs:
