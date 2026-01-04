@@ -81,21 +81,21 @@ stages:
     # -------------------------------------------------
     # 5. Snyk App Scan (Python 3.11 container)
     # -------------------------------------------------
-    - script: |
-        docker run --rm \
-          -v $(Build.SourcesDirectory):/project \
-          -w /project \
-          python:3.11-slim \
-          sh -c "
-            apt-get update && apt-get install -y curl &&
-            curl -sSL https://static.snyk.io/cli/latest/snyk-linux -o snyk &&
-            chmod +x snyk &&
-            ./snyk auth \$snyk_token &&
-            ./snyk test --file=requirements.txt --severity-threshold=high
-          "
-      displayName: Snyk Open Source Scan (Python 3.11)
-      env:
-        snyk_token: $(snyk_token)
+    # - script: |
+    #     docker run --rm \
+    #       -v $(Build.SourcesDirectory):/project \
+    #       -w /project \
+    #       python:3.11-slim \
+    #       sh -c "
+    #         apt-get update && apt-get install -y curl &&
+    #         curl -sSL https://static.snyk.io/cli/latest/snyk-linux -o snyk &&
+    #         chmod +x snyk &&
+    #         ./snyk auth \$snyk_token &&
+    #         ./snyk test --file=requirements.txt --severity-threshold=high
+    #       "
+    #   displayName: Snyk Open Source Scan (Python 3.11)
+    #   env:
+    #     snyk_token: $(snyk_token)
 
     - task: SnykSecurityScan@1
       inputs:
