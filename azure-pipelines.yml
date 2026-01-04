@@ -66,6 +66,7 @@ stages:
       inputs:
         serviceConnectionEndpoint: 'snyk-cloud'
         testType: 'app'
+        targetFile: 'requirements.txt'
         severityThreshold: 'high'
         monitorWhen: 'always'
         failOnIssues: true
