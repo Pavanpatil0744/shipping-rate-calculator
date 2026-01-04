@@ -37,6 +37,8 @@ stages:
         cliProjectName: 'shipping-rate-calculator'
         cliProjectVersion: '1.0.$(Build.BuildId)'
         cliSources: '.'
+        extraProperties: |
+          sonar.branch.name=
 
     # -------------------------------
     # SonarQube - Analyze
