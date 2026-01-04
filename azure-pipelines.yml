@@ -58,17 +58,59 @@ stages:
     - task: SonarCloudPublish@4
       inputs:
         pollingTimeoutSec: '300'
+      
+    # -------------------------------------------------
+    # 4. SnykCloud - Application dependencies scan
+    # -------------------------------------------------
+    - task: SnykSecurityScan@1
+      inputs:
+        serviceConnectionEndpoint: 'snyk-cloud'
+        testType: 'app'
+        severityThreshold: 'high'
+        monitorWhen: 'always'
+        failOnIssues: true
 
     # -------------------------------------------------
-    # 5. Docker Build & Push (ONLY if quality passed)
+    # 4. SnykCloud - Application code scan
     # -------------------------------------------------
+    - task: SnykSecurityScan@1
+      inputs:
+        serviceConnectionEndpoint: 'snyk-cloud'
+        testType: 'code'
+        codeSeverityThreshold: 'high'
+        failOnIssues: true
+
+# --------------------------------
+# Docker Build (LOCAL only)
+# --------------------------------
     - task: Docker@2
-      displayName: Build and push Docker image
+      displayName: Docker Build
       condition: succeeded()
       inputs:
-        command: buildAndPush
+        command: build
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+
+    - task: SnykSecurityScan@1
+      inputs:
+        serviceConnectionEndpoint: 'snyk-cloud'
+        testType: 'container'
+        dockerImageName: '$(imageRepository):$(tag)'
+        severityThreshold: 'critical'
+        monitorWhen: 'always'
+        failOnIssues: true
+# --------------------------------
+# Docker Push (ONLY if scan passed)
+# --------------------------------
+    - task: Docker@2
+      displayName: Docker Push
+      condition: succeeded()
+      inputs:
+        command: push
+        repository: $(imageRepository)
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
