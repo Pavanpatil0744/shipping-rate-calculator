@@ -49,7 +49,7 @@ stages:
 
     - script: |
         snyk auth $SNYK_TOKEN
-        snyk test --all-projects
+        snyk test --unmanaged
       env:
         snyk_token: $(SNYK_TOKEN)
       displayName: 'Snyk Scan'
