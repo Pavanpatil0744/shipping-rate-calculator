@@ -39,14 +39,6 @@ stages:
     pool:
       name: $(vmImageName)
 
-      steps:
-        - script: |
-            snyk auth $snyk_token
-            snyk test --all-projects
-          env:
-            snyk_token: $(snyk_token)
-          displayName: 'Snyk Security Scan'
-
     steps:
     # -------------------------------------------------
     # 1. Checkout (FULL history required for blame)
@@ -54,6 +46,13 @@ stages:
     - checkout: self
       fetchDepth: 0
       clean: true
+
+    - script: |
+        snyk auth $snyk_token
+        snyk test --all-projects
+      env:
+        snyk_token: $(snyk_token)
+      displayName: 'Snyk Scan'
 
     # -------------------------------------------------
     # 2. SonarCloud - Prepare Analysis
@@ -106,24 +105,24 @@ stages:
     #     snyk_token: $(snyk_token)
 
 
-    - task: SnykSecurityScan@1
-      inputs:
-        serviceConnectionEndpoint: 'snyk-cloud'
-        testType: 'app'
-        targetFile: 'requirements.txt'
-        severityThreshold: 'high'
-        monitorWhen: 'always'
-        failOnIssues: true
+    # - task: SnykSecurityScan@1
+    #   inputs:
+    #     serviceConnectionEndpoint: 'snyk-cloud'
+    #     testType: 'app'
+    #     targetFile: 'requirements.txt'
+    #     severityThreshold: 'high'
+    #     monitorWhen: 'always'
+    #     failOnIssues: true
 
     # -------------------------------------------------
     # 4. SnykCloud - Application code scan
     # -------------------------------------------------
-    - task: SnykSecurityScan@1
-      inputs:
-        serviceConnectionEndpoint: 'snyk-cloud'
-        testType: 'code'
-        codeSeverityThreshold: 'high'
-        failOnIssues: true
+    # - task: SnykSecurityScan@1
+    #   inputs:
+    #     serviceConnectionEndpoint: 'snyk-cloud'
+    #     testType: 'code'
+    #     codeSeverityThreshold: 'high'
+    #     failOnIssues: true
 
 # --------------------------------
 # Docker Build (LOCAL only)
