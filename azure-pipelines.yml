@@ -119,27 +119,27 @@ stages:
     # -------------------------------------------------
     # 5. Generate Trivy JUnit Report (ALWAYS runs)
     # -------------------------------------------------
-    - script: |
-        trivy image \
-          --severity HIGH,CRITICAL \
-          --exit-code 0 \
-          --format junit \
-          -o $(Build.ArtifactStagingDirectory)/trivy-report.xml \
-          $(containerRegistry)/$(imageRepository):$(tag)
-      displayName: Generate Trivy JUnit Report
-      condition: succeededOrFailed()
+    # - script: |
+    #     trivy image \
+    #       --severity HIGH,CRITICAL \
+    #       --exit-code 0 \
+    #       --format junit \
+    #       -o $(Build.ArtifactStagingDirectory)/trivy-report.xml \
+    #       $(containerRegistry)/$(imageRepository):$(tag)
+    #   displayName: Generate Trivy JUnit Report
+    #   condition: succeededOrFailed()
 
     # -------------------------------------------------
     # 6. Publish Trivy Report (Azure DevOps Test tab)
     # -------------------------------------------------
-    - task: PublishTestResults@2
-      displayName: Publish Trivy Report
-      inputs:
-        testResultsFormat: JUnit
-        testResultsFiles: '$(Build.ArtifactStagingDirectory)/trivy-report.xml'
-        mergeTestResults: true
-        failTaskOnFailedTests: false
-        testRunTitle: Trivy Vulnerability Scan
+    # - task: PublishTestResults@2
+    #   displayName: Publish Trivy Report
+    #   inputs:
+    #     testResultsFormat: JUnit
+    #     testResultsFiles: '$(Build.ArtifactStagingDirectory)/trivy-report.xml'
+    #     mergeTestResults: true
+    #     failTaskOnFailedTests: false
+    #     testRunTitle: Trivy Vulnerability Scan
 
 # --------------------------------
 # Docker Push (ONLY if scan passed)
