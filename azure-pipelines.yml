@@ -91,8 +91,9 @@ stages:
           $(tag)
 
 
+
     # -------------------------------------------------
-    # 3. Install Trivy
+    # 3. Install Trivy (Non-root safe)
     # -------------------------------------------------
     - script: |
         mkdir -p $(HOME)/bin
@@ -103,9 +104,8 @@ stages:
         pwd
       displayName: Install Trivy
 
-
     # -------------------------------------------------
-    # 4. Trivy Scan (Fail on HIGH / CRITICAL)
+    # 4. Trivy Image Scan (FAIL on HIGH / CRITICAL)
     # -------------------------------------------------
     - script: |
         trivy image \
@@ -117,20 +117,20 @@ stages:
       condition: succeeded()
 
     # -------------------------------------------------
-    # 5. Generate Trivy Report (JUnit)
+    # 5. Generate Trivy JUnit Report (ALWAYS runs)
     # -------------------------------------------------
     - script: |
         trivy image \
           --severity HIGH,CRITICAL \
-          --format template \
-          --template "@contrib/junit.tpl" \
+          --exit-code 0 \
+          --format junit \
           -o $(Build.ArtifactStagingDirectory)/trivy-report.xml \
           $(containerRegistry)/$(imageRepository):$(tag)
-      displayName: Generate Trivy Report
+      displayName: Generate Trivy JUnit Report
       condition: succeededOrFailed()
 
     # -------------------------------------------------
-    # 6. Publish Trivy Report
+    # 6. Publish Trivy Report (Azure DevOps Test tab)
     # -------------------------------------------------
     - task: PublishTestResults@2
       displayName: Publish Trivy Report
