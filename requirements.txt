@@ -2,3 +2,5 @@ fastapi
 uvicorn
 requests
 python-dotenv
+django==2.2.0
+
