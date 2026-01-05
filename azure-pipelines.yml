@@ -99,6 +99,7 @@ stages:
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
           | sh -s -- -b $(HOME)/bin
         echo "##vso[task.prependpath]$(HOME)/bin"
+        pwd
         trivy --version
       displayName: Install Trivy
 
