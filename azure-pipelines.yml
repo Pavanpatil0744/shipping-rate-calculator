@@ -40,23 +40,12 @@ stages:
       name: $(vmImageName)
 
       steps:
-      - task: NodeTool@0
-        inputs:
-          versionSpec: '20.x'
-        displayName: 'Install Node.js'
-
-      - script: |
-          npm install && npm run client-install
-          curl --compressed https://downloads.snyk.io/cli/stable/snyk-linux -o snyk
-          chmod +x ./snyk
-          mv ./snyk /usr/local/bin/
-          npm install snyk-to-html -g
-          mkdir -p results
-          snyk auth $(snyk_token)
-          snyk test --all-projects
-        env:
-          snyk_token: $(snyk_token)
-        displayName: 'Security Scans'
+        - script: |
+            snyk auth $snyk_token
+            snyk test --all-projects
+          env:
+            snyk_token: $(snyk_token)
+          displayName: 'Snyk Security Scan'
 
     steps:
     # -------------------------------------------------
