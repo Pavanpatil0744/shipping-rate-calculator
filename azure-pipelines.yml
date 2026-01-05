@@ -95,10 +95,13 @@ stages:
     # 3. Install Trivy
     # -------------------------------------------------
     - script: |
+        mkdir -p $(HOME)/bin
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-        | sh -s -- -b /usr/local/bin
+          | sh -s -- -b $(HOME)/bin
+        echo "##vso[task.prependpath]$(HOME)/bin"
         trivy --version
       displayName: Install Trivy
+
 
     # -------------------------------------------------
     # 4. Trivy Scan (Fail on HIGH / CRITICAL)
