@@ -48,10 +48,10 @@ stages:
       clean: true
 
     - script: |
-        snyk auth $snyk_token
+        snyk auth $SNYK_TOKEN
         snyk test --all-projects
       env:
-        snyk_token: $(snyk_token)
+        snyk_token: $(SNYK_TOKEN)
       displayName: 'Snyk Scan'
 
     # -------------------------------------------------
