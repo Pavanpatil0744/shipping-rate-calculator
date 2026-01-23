@@ -1,4 +1,3 @@
-
 trigger:
 - main
 
@@ -29,14 +28,12 @@ variables:
 - name: vmImageName
   value: 'logistics'
 
-
-
 stages:
 - stage: QualityAndBuild
-  displayName: SonarCloud Quality Gate + Docker Build
+  displayName: 'SonarQube Quality Gate + Docker Build'
   jobs:
   - job: Build
-    displayName: Quality Check and Build
+    displayName: 'Quality Check and Build'
     pool:
       name: $(vmImageName)
 
@@ -49,7 +46,7 @@ stages:
       clean: true
 
     # -------------------------------------------------
-    # 2. Sonarserver - Prepare Analysis
+    # 2. SonarQube - Prepare Analysis
     # -------------------------------------------------
     - task: SonarQubePrepare@8
       inputs:
@@ -59,58 +56,41 @@ stages:
         cliProjectKey: 'logistics-shipping-rate-calculator'
         cliProjectName: 'shipping-rate-calculator'
         cliProjectVersion: '1.0.$(Build.BuildId)'
-        cliSources: '.' 
+        cliSources: '.'
 
     # -------------------------------------------------
-    # 3. Sonarserver - Analyze Code
+    # **NEW** Remove sonar.branch.name (Community Edition Fix)
+    # -------------------------------------------------
+    - script: |
+        # Remove sonar.branch.name from environment params for main branch only
+        if [ -n "$SONARQUBE_SCANNER_PARAMS" ]; then
+          export SONARQUBE_SCANNER_PARAMS=$(echo "$SONARQUBE_SCANNER_PARAMS" | sed 's/"sonar.branch.name":"[^"]*"[,]*//g')
+          echo "Updated SONARQUBE_SCANNER_PARAMS (branch prop removed): $SONARQUBE_SCANNER_PARAMS"
+        fi
+        echo "##vso[task.setvariable variable=SONARQUBE_SCANNER_PARAMS]$SONARQUBE_SCANNER_PARAMS"
+      displayName: 'Remove sonar.branch.name for Community Edition'
+      env:
+        SONARQUBE_SCANNER_PARAMS: $(SONARQUBE_SCANNER_PARAMS)
+
+    # -------------------------------------------------
+    # 3. SonarQube - Analyze Code
     # -------------------------------------------------
     - task: SonarQubeAnalyze@8
       inputs:
         jdkversion: 'JAVA_HOME_17_X64'
 
     # -------------------------------------------------
-    # 4. SonarCloud - Enforce Quality Gate
+    # 4. SonarQube - Enforce Quality Gate
     # -------------------------------------------------
     - task: SonarQubePublish@8
       inputs:
         pollingTimeoutSec: '300'
 
     # -------------------------------------------------
-    # 2. SonarCloud - Prepare Analysis
-    # -------------------------------------------------
-    
-
-    # - task: SonarCloudPrepare@4
-    #   inputs:
-    #     SonarQube: 'sonarcloud'
-    #     organization: 'techwithpatil'
-    #     scannerMode: 'cli'
-    #     configMode: 'manual'
-    #     cliProjectKey: 'techwithpatil_logistics'
-    #     cliProjectName: 'logistics'
-    #     cliSources: '.'
-
-    # -------------------------------------------------
-    # 3. SonarCloud - Analyze Code
-    # -------------------------------------------------
-    # - task: SonarCloudAnalyze@4
-    #   inputs:
-    #     jdkversion: 'JAVA_HOME_17_X64'
-
-    # -------------------------------------------------
-    # 4. SonarCloud - Enforce Quality Gate
-    # -------------------------------------------------
-    # - task: SonarCloudPublish@4
-    #   inputs:
-    #     pollingTimeoutSec: '300'
-      
-
-
-# --------------------------------
-# Docker Build (LOCAL only)
-# --------------------------------
+    # Docker Build (LOCAL only)
+    # --------------------------------
     - task: Docker@2
-      displayName: Docker Build
+      displayName: 'Docker Build'
       condition: succeeded()
       inputs:
         command: build
@@ -119,8 +99,6 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
-
-
 
     # -------------------------------------------------
     # 3. Install Trivy (Non-root safe)
@@ -132,7 +110,7 @@ stages:
         echo "##vso[task.prependpath]$(HOME)/bin"
         trivy --version
         pwd
-      displayName: Install Trivy
+      displayName: 'Install Trivy'
 
     # -------------------------------------------------
     # 4. Trivy Image Scan (FAIL on HIGH / CRITICAL)
@@ -143,39 +121,14 @@ stages:
           --severity HIGH,CRITICAL \
           --format table \
           $(containerRegistry)/$(imageRepository):$(tag)
-      displayName: Trivy Image Scan
+      displayName: 'Trivy Image Scan'
       condition: succeeded()
 
     # -------------------------------------------------
-    # 5. Generate Trivy JUnit Report (ALWAYS runs)
-    # -------------------------------------------------
-    # - script: |
-    #     trivy image \
-    #       --severity HIGH,CRITICAL \
-    #       --exit-code 0 \
-    #       --format junit \
-    #       -o $(Build.ArtifactStagingDirectory)/trivy-report.xml \
-    #       $(containerRegistry)/$(imageRepository):$(tag)
-    #   displayName: Generate Trivy JUnit Report
-    #   condition: succeededOrFailed()
-
-    # -------------------------------------------------
-    # 6. Publish Trivy Report (Azure DevOps Test tab)
-    # -------------------------------------------------
-    # - task: PublishTestResults@2
-    #   displayName: Publish Trivy Report
-    #   inputs:
-    #     testResultsFormat: JUnit
-    #     testResultsFiles: '$(Build.ArtifactStagingDirectory)/trivy-report.xml'
-    #     mergeTestResults: true
-    #     failTaskOnFailedTests: false
-    #     testRunTitle: Trivy Vulnerability Scan
-
-# --------------------------------
-# Docker Push (ONLY if scan passed)
-# --------------------------------
+    # Docker Push (ONLY if scan passed)
+    # --------------------------------
     - task: Docker@2
-      displayName: Docker Push
+      displayName: 'Docker Push'
       condition: succeeded()
       inputs:
         command: push
