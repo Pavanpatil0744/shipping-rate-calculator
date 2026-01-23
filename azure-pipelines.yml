@@ -48,8 +48,37 @@ stages:
       clean: true
 
     # -------------------------------------------------
+    # 2. Sonarserver - Prepare Analysis
+    # -------------------------------------------------
+    - task: SonarQubePrepare@8
+      inputs:
+        SonarQube: 'kvm-sonarqube'
+        scannerMode: 'cli'
+        configMode: 'manual'
+        cliProjectKey: 'logistics-shipping-rate-calculator'
+        cliProjectName: 'shipping-rate-calculator'
+        cliProjectVersion: '1.0.$(Build.BuildId)'
+        cliSources: '.' 
+
+    # -------------------------------------------------
+    # 3. Sonarserver - Analyze Code
+    # -------------------------------------------------
+    - task: SonarQubeAnalyze@8
+      inputs:
+        jdkversion: 'JAVA_HOME_17_X64'
+
+    # -------------------------------------------------
+    # 4. SonarCloud - Enforce Quality Gate
+    # -------------------------------------------------
+    - task: SonarQubePublish@8
+      inputs:
+        pollingTimeoutSec: '300'
+
+    # -------------------------------------------------
     # 2. SonarCloud - Prepare Analysis
     # -------------------------------------------------
+    
+
     # - task: SonarCloudPrepare@4
     #   inputs:
     #     SonarQube: 'sonarcloud'
